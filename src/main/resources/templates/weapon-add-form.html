@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>신규 무기 등록</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 25px; }
+        .form-group { margin-bottom: 15px; border: 1px solid #eee; padding: 15px; border-radius: 5px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; margin-top: 3px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>➕ 신규 무기 등록</h1>
+
+<form action="/weapon/add" method="post">
+
+    <h2>1. 무기 기본 정보</h2>
+    <div class="form-group">
+
+        <label for="name">무기 이름:</label>
+        <input type="text" id="name" name="name" required placeholder="예: K-2 흑표 전차">
+
+        <label for="categoryId">카테고리 선택:</label>
+        <select id="categoryId" name="categoryId" required>
+            <option value="">-- 선택 --</option>
+            <option value="4">전차 (ID: 4)</option>
+            <option value="5">자주포 (ID: 5)</option>
+            <option value="6">전투기 (ID: 6)</option>
+            <option value="7">헬리콥터 (ID: 7)</option>
+        </select>
+
+        <label for="platformId">플랫폼:</label>
+        <select id="platformId" name="platformId" required>
+            <option value="">-- 선택 --</option>
+            <option value="1">지상 (ID: 1)</option>
+            <option value="2">공중 (ID: 2)</option>
+            <option value="3">해상 (ID: 3)</option>
+        </select>
+
+        <label for="manufacturerId">제조사:</label>
+        <select id="manufacturerId" name="manufacturerId" required>
+            <option value="">-- 선택 --</option>
+            <option value="1">한화에어로스페이스 (ID: 1)</option>
+            <option value="2">KAI (ID: 2)</option>
+            <option value="3">현대로템 (ID: 3)</option>
+            <option value="4">대우조선해양 (ID: 4)</option>
+        </select>
+
+
+        <label for="previousModelId">선행 모델 (ID):</label>
+        <input type="number" id="previousModelId" name="previousModelId" placeholder="선행 모델이 있다면 ID 입력">
+    </div>
+
+    <h2>2. 지상 스펙 및 전차 고유 제원</h2>
+    <div class="form-group">
+
+        <label for="maxSpeedKmh">최고 속력 (km/h):</label>
+        <input type="number" step="0.1" id="maxSpeedKmh" name="maxSpeedKmh" placeholder="예: 70.0">
+
+        <label for="landCrewCapacity">승무원 수:</label>
+        <input type="number" id="landCrewCapacity" name="landCrewCapacity" placeholder="예: 3">
+
+        <label for="armorThicknessMm">장갑 두께 (mm, 공통):</label>
+        <input type="number" id="armorThicknessMm" name="armorThicknessMm" placeholder="예: 100">
+
+        <label for="tangentCapacity">탄젠트 적재량:</label>
+        <input type="number" step="0.01" id="tangentCapacity" name="tangentCapacity" placeholder="예: 1.50">
+
+        <label for="gunCaliber">주포 구경 (mm):</label>
+        <input type="number" id="gunCaliber" name="gunCaliber" placeholder="예: 120">
+
+        <label for="tankArmorThickness">장갑 두께 (mm, 전차 고유):</label>
+        <input type="number" id="tankArmorThickness" name="tankArmorThickness" placeholder="예: 120 (자주포는 비워둘 수 있음)">
+
+    </div>
+
+    <button type="submit">무기 데이터 저장</button>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${weapon.name} + ' - 무기 상세'">무기 상세 페이지</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* 상세 페이지 레이아웃을 위한 기본 CSS (기존 스타일 유지) */
+        .detail-container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #4f46e5;
+        }
+        .spec-section {
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px solid #e0e7ff;
+            border-radius: 6px;
+        }
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .spec-table th, .spec-table td {
+            padding: 8px;
+            border: 1px solid #f3f4f6;
+            text-align: left;
+        }
+        .spec-table th {
+            background-color: #f7f7f9;
+            width: 30%;
+        }
+    </style>
+</head>
+<body>
+<div class="container detail-container">
+    <a th:href="@{/search}" style="color: #4f46e5; text-decoration: none;">&larr; 목록으로 돌아가기</a>
+
+    <hr>
+
+    <h1 th:text="${weapon.name}" style="margin-top: 10px; border-bottom: 2px solid #e0e7ff; padding-bottom: 10px;">무기 이름</h1>
+
+    <div class="info-grid">
+        <div>
+            <p class="info-label">제조사:</p>
+            <p th:text="${weapon.manufacturer.name}"></p>
+
+            <p class="info-label">플랫폼 (사용 환경):</p>
+            <p th:text="${weapon.platform.platform}"></p> <p class="info-label">카테고리:</p>
+            <p th:text="${weapon.category.name}"></p>
+        </div>
+
+        <div>
+            <p class="info-label">Weapon ID:</p>
+            <p th:text="${weapon.weaponId}"></p>
+
+            <p class="info-label">설립 연도:</p>
+            <p th:text="${weapon.manufacturer.foundedYear}"></p>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="spec-section">
+        <h2>상세 스펙 정보</h2>
+
+        <th:block th:if="${weapon.seaSpec}">
+            <h3 style="color: #007bff;">[해상 공통 스펙]</h3>
+            <table class="spec-table">
+                <tr>
+                    <th>최고 속력 (Knot)</th>
+                    <td th:text="${weapon.seaSpec.maxSpeedKnot}"></td>
+                </tr>
+                <tr>
+                    <th>배수량</th>
+                    <td th:text="${weapon.seaSpec.displacement}"></td>
+                </tr>
+                <tr>
+                    <th>승무원</th>
+                    <td th:text="${weapon.seaSpec.crewCapacity}"></td>
+                </tr>
+                <tr>
+                    <th>무장</th>
+                    <td th:text="${weapon.seaSpec.armament}"></td>
+                </tr>
+                <tr>
+                    <th>레이더 타입</th>
+                    <td th:text="${weapon.seaSpec.radarType}"></td>
+                </tr>
+            </table>
+
+            <th:block th:if="${weapon.seaSpec.vessel}">
+                <h4 style="color: #28a745; margin-top: 20px;">[함정 고유 스펙]</h4>
+                <table class="spec-table">
+                    <tr>
+                        <th>정확 속도</th>
+                        <td th:text="${weapon.seaSpec.vessel.accuracySpeed}"></td>
+                    </tr>
+                    <tr>
+                        <th>최대 속력 (Vessel)</th>
+                        <td th:text="${weapon.seaSpec.vessel.maxSpeedVessel}"></td>
+                    </tr>
+                    <tr>
+                        <th>부양력</th>
+                        <td th:text="${weapon.seaSpec.vessel.buoyancyVessel}"></td>
+                    </tr>
+                </table>
+            </th:block>
+
+            <th:block th:if="${weapon.seaSpec.submarine}">
+                <h4 style="color: #28a745; margin-top: 20px;">[잠수정 고유 스펙]</h4>
+                <table class="spec-table">
+                    <tr>
+                        <th>최대 잠항 깊이 (m)</th>
+                        <td th:text="${weapon.seaSpec.submarine.maxDivingDepth}"></td>
+                    </tr>
+                    <tr>
+                        <th>어뢰 발사관 수</th>
+                        <td th:text="${weapon.seaSpec.submarine.torpedoTubesCount}"></td>
+                    </tr>
+                    <tr>
+                        <th>음향 시그니처</th>
+                        <td th:text="${weapon.seaSpec.submarine.acousticSignature}"></td>
+                    </tr>
+                </table>
+            </th:block>
+        </th:block>
+
+        <th:block th:if="${weapon.airSpec}">
+            <h3 style="color: #dc3545;">[공중 공통 스펙]</h3>
+        </th:block>
+
+        <th:block th:if="${weapon.landSpec}">
+            <h3 style="color: #ffc107;">[지상 공통 스펙]</h3>
+        </th:block>
+
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>무기 검색 서비스</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+    <link rel="stylesheet" th:href="@{/main.css}">
+</head>
+<body>
+
+<h1>🔎 무기 검색 서비스</h1>
+
+<form id="searchForm" action="/search" method="get">
+
+    <label for="mainCategory">주요 카테고리:</label>
+    <select id="mainCategory" name="mainCategoryId">
+        <option value="">-- 상위 선택 --</option>
+        <option value="1" th:selected="${selectedMainCategoryId == 1}">지상무기</option>
+        <option value="2" th:selected="${selectedMainCategoryId == 2}">공중무기</option>
+        <option value="3" th:selected="${selectedMainCategoryId == 3}">해상무기</option>
+    </select>
+
+    <label for="subCategory">세부 카테고리:</label>
+    <select id="subCategory" name="categoryId">
+        <option value="">-- 세부 선택 --</option>
+    </select>
+
+    <input
+            type="text"
+            name="keyword"
+            placeholder="검색어를 입력하세요"
+            th:value="${searchKeyword}"
+    >
+    <button type="submit">검색 시작</button>
+</form>
+
+<hr>
+
+<h2 th:if="${searchKeyword}">
+    '[[${searchKeyword}]]' 검색 결과
+</h2>
+<h2 th:unless="${searchKeyword}">
+    무기 목록
+</h2>
+
+<table th:if="${!#lists.isEmpty(weaponList)}">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>이름</th>
+        <th>카테고리</th>
+        <th>제조사</th>
+        <th>국가</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="weapon : ${weaponList}"
+        th:data-weapon-id="${weapon.id}"
+        style="cursor: pointer;"> <td th:text="${weapon.id}">1</td>
+        <td th:text="${weapon.name}">K2 흑표 전차</td>
+        <td th:text="${weapon.category.name}">전차</td>
+        <td th:text="${weapon.manufacturer.name}">현대로템</td>
+        <td th:text="${weapon.country}">대한민국</td>
+    </tr>
+    </tbody>
+</table>
+
+<p th:if="${#lists.isEmpty(weaponList)}">
+    조회된 무기가 없습니다. 검색 조건을 다시 확인해 주세요.
+</p>
+
+</body>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script th:inline="javascript">
+    $(document).ready(function() {
+        const $mainCategory = $('#mainCategory');
+        const $subCategory = $('#subCategory');
+        const $searchForm = $('#searchForm');
+
+        // Controller에서 전달받은 이전 선택 값을 Thymeleaf로 가져옵니다.
+        const previouslySelectedMainId = '[[${selectedMainCategoryId}]]';
+        const previouslySelectedSubId = '[[${selectedCategoryId}]]';
+
+        // 1. 하위 카테고리 동적 로딩 및 복원 함수
+        function loadSubcategories(parentId) {
+            $subCategory.empty();
+            $subCategory.append('<option value="">-- 세부 선택 --</option>');
+
+            if (parentId) {
+                // AJAX 호출: 부모 ID를 백엔드 API에 전달
+                $.ajax({
+                    url: '/api/categories/' + parentId,
+                    type: 'GET',
+                    success: function(data) {
+                        data.forEach(function(category) {
+                            $subCategory.append(
+                                $('<option>', {
+                                    value: category.id,
+                                    text: category.name
+                                })
+                            );
+                        });
+
+                        // [복원 로직]: AJAX 완료 후, 이전에 선택했던 세부 카테고리 값을 복원
+                        if (previouslySelectedSubId && previouslySelectedSubId !== 'null') {
+                            $subCategory.val(previouslySelectedSubId);
+                        }
+                    },
+                    error: function(error) {
+                        console.error("하위 카테고리 로드 실패", error);
+                    }
+                });
+            }
+        }
+
+        // 2. 상위 카테고리 변경 이벤트 리스너
+        $mainCategory.change(function() {
+            const parentId = $(this).val();
+            loadSubcategories(parentId);
+        });
+
+        // 3. [초기 로딩 시 복원]: 페이지 로드 시 상위 카테고리가 선택되어 있었다면
+        if (previouslySelectedMainId && previouslySelectedMainId !== 'null') {
+             // 'change' 이벤트를 강제로 발생시켜 하위 목록을 로드하고 선택 값을 복원합니다.
+             $mainCategory.val(previouslySelectedMainId).trigger('change');
+        }
+
+        // 4. [검색 폼 전송 로직]: 검색 폼 제출 시 필터링 값 조정
+        $searchForm.submit(function(e) {
+            const mainId = $mainCategory.val();
+            const subId = $subCategory.val();
+
+            // 세부 카테고리가 비어있고, 상위 카테고리가 선택된 경우:
+            // Controller가 상위 ID로 검색할 수 있도록 name="categoryId" 필드의 값을 덮어씁니다.
+            if (!subId && mainId) {
+                $subCategory.val(mainId);
+            }
+        });
+
+        // 5. [상세 페이지 이동 로직]: 테이블 행 클릭 이벤트
+        // th:data-weapon-id 속성을 가진 테이블의 모든 행에 이벤트 리스너를 붙입니다.
+        $('table tbody tr').click(function() {
+            // 클릭된 행에서 무기 ID를 가져옵니다.
+            const weaponId = $(this).data('weapon-id');
+
+            if (weaponId) {
+                // Controller에 정의된 상세 페이지 경로로 이동
+                window.location.href = '/weapon/' + weaponId;
+            }
+        });
+    });
+</script>
+
+
+
+</html>

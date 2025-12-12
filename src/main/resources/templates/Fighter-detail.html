@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${weapon.weapon_name} + ' 상세 스펙'"></title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #800000; border-bottom: 2px solid #800000; padding-bottom: 5px; }
+        h2 { color: #B22222; margin-top: 20px; border-left: 5px solid #B22222; padding-left: 10px; }
+        .spec-group { margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; }
+        .spec-item { margin: 5px 0; font-size: 1.1em; }
+        .spec-label { font-weight: bold; display: inline-block; width: 200px; color: #333; }
+    </style>
+</head>
+<body>
+
+<h1 th:text="${weapon.weapon_name}">전투기 이름</h1>
+<p>무기 ID: <span th:text="${weapon.weapon_id}"></span></p>
+
+<h2>✈️ 공중 공통 스펙</h2>
+<div class="spec-group">
+    <p class="spec-item"><span class="spec-label">최고 속력 (마하):</span> <span th:text="${weapon.max_speed_mach}"></span></p>
+    <p class="spec-item"><span class="spec-label">반전 속력 (마하):</span> <span th:text="${weapon.reversal_speed}"></span></p>
+    <p class="spec-item"><span class="spec-label">상승률:</span> <span th:text="${weapon.climb_rate}"></span></p>
+    <p class="spec-item"><span class="spec-label">승무원 수:</span> <span th:text="${weapon.air_crew_capacity}"></span></p>
+</div>
+
+<h2>🚀 전투기 고유 스펙</h2>
+<div class="spec-group">
+    <p class="spec-item"><span class="spec-label">날개 너비:</span> <span th:text="${weapon.wing_span}"></span></p>
+    <p class="spec-item"><span class="spec-label">G 한계 (Max G-Force):</span> <span th:text="${weapon.max_g_force}"></span></p>
+</div>
+
+
+<div th:with="hasPredecessors=${!#lists.isEmpty(predecessors)}, hasSuccessors=${!#lists.isEmpty(successors)}">
+
+    <div class="spec-group">
+        <h3>⬅️ 이전 모델 (선행 계보)</h3>
+
+        <table th:if="${hasPredecessors}">
+            <thead>
+            <tr>
+                <th>세대</th>
+                <th>모델명</th>
+                <th>Weapon ID</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="model : ${predecessors}">
+                <td th:text="${model.generation_level}"></td>
+                <td th:text="${model.predecessor_name}"></td>
+                <td th:text="${model.weapon_id}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p th:unless="${hasPredecessors}" style="color: #666;">
+            이 무기는 계열의 최초 모델이거나 이전 모델 정보가 등록되지 않았습니다.
+        </p>
+    </div>
+
+    <div class="spec-group" style="margin-top: 20px;">
+        <h3>➡️ 후속 모델 (개량 버전)</h3>
+
+        <table th:if="${hasSuccessors}">
+            <thead>
+            <tr>
+                <th>세대</th>
+                <th>모델명</th>
+                <th>Weapon ID</th>
+                <th>선행 모델</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="model : ${successors}">
+                <td th:text="${model.generation_level}"></td>
+                <td th:text="${model.successor_name}"></td>
+                <td th:text="${model.weapon_id}"></td>
+                <td th:text="${model.previous_model_name}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p th:unless="${hasSuccessors}" style="color: #666;">
+            현재 등록된 후속 개량 모델이 없습니다.
+        </p>
+    </div>
+
+</div>
+
+
+<h2>🎁 프라모델 정보</h2>
+
+<div th:if="${!#lists.isEmpty(modelLinks)}">
+
+    <div th:each="link : ${modelLinks}" class="spec-group" style="margin-bottom: 20px; border: 1px dashed #ccc; padding: 15px;">
+
+        <h3 th:text="${link.name != null ? link.name : '프라모델 정보'}">프라모델 이름</h3>
+
+        <div th:if="${link.image_url != null}">
+            <img th:src="@{${link.image_url}}" alt="프라모델 이미지" style="max-width: 300px; height: auto; margin-bottom: 10px;">
+        </div>
+
+        <p class="spec-item"><span class="spec-label">시리즈 명:</span>
+            <span th:text="${link.series}"></span>
+        </p>
+
+        <p class="spec-item" th:if="${link.description != null}"><span class="spec-label">설명:</span>
+            <span th:text="${link.description}"></span>
+        </p>
+
+        <p class="spec-item"><span class="spec-label">구매 링크:</span>
+            <a th:href="${link.product_page_url}" target="_blank">프라모델 구매 페이지로 이동</a>
+        </p>
+
+    </div>
+</div>
+
+<p th:if="${#lists.isEmpty(modelLinks)}">
+    현재 이 무기에 대한 프라모델 정보는 등록되어 있지 않습니다.
+</p>
+
+</body>
+</html>
