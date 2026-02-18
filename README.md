@@ -18,16 +18,16 @@ Demo Video: [시연 영상](https://youtu.be/bea_D4kw5WE)
 
 ### 개발 환경 및 주요 개발 스택 
 - Backend
-      - Java 17
-      - Spring Boot 3.0
-      - Spring Data JPA
-      - MariaDB (Local)
+   - Java 17
+   - Spring Boot 3.0
+   - Spring Data JPA
+   - MariaDB (Local)
 - Frontend
-      - HTML5 / CSS3
-      - Thymeleaf
+   - HTML5 / CSS3
+   - Thymeleaf
 - Tools
-      - IntelliJ IDEA
-      - Git / GitHub
+   - IntelliJ IDEA
+   - Git / GitHub
 
 본 프로젝트는 Layered Architecture (Controller - Service - Repository)를 준수하여 유지보수성과 확장성을 고려했다.  
       - Entity Mapping: DB 테이블 구조를 객체로 매핑하여 관리
