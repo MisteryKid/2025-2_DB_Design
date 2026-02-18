@@ -45,7 +45,7 @@ Demo Video: [시연 영상](https://youtu.be/bea_D4kw5WE)
 
 # 2차 과제 - DB 구축 
 ### 효율적인 무기 데이터 저장 전략
-무기(Weapon) 데이터는 '지상/해상/공중' 등 운용 환경에 따라 **세부 스펙(속성)이 완전히 상이**.
+무기(Weapon) 데이터는 '지상/해상/공중' 등 운용 환경에 따라 **세부 스펙(속성)이 완전히 상이**함.
 이를 효율적으로 관리하기 위해 **계층적 설계(Supertype/Subtype)** 방식을 적용
 
 **[문제 인식: 단일 테이블 전략의 한계]**
@@ -75,13 +75,35 @@ findByNameContainingIgnoreCase(String name) # 대소문자를 구분하지 않�
       - 무기 종류(함정, 잠수함, 탱크, 전투기 등)에 따라 서로 다른 상세 스펙 테이블을 가짐
       - 구현: * Category ID를 기반으로 서비스 레이어에서 분기 처리 (Switch/If문)
       - Native Query를 사용하여 각 무기 타입에 맞는 전용 테이블(Join)에서 데이터를 조회 후 반환
-```
-@Query(value ="SELECT " +"    W.name AS weapon_name, " +"    W.weapon_id, " +"    SS.max_speed_knot, " +"    SS.displacement, " +"    SS.crew_capacity AS sea_crew_capacity, " +"    SS.armament, " +"    SS.radar_type, " +"    V.accuracy_speed, " +"    V.max_speed_vessel, " +"    V.buoyancy_vessel " +"FROM " +"    Weapon W " +"JOIN " +"    sea_spec SS ON W.weapon_id = SS.weapon_weapon_id " +"JOIN " +"    vessel V ON SS.weapon_weapon_id = V.weapon_id " +"WHERE " +"    W.weapon_id = :weaponId",nativeQuery = true)Optional<Map<String, Object>> findVesselDetailNative(@Param("weaponId") Long weaponId);
+
+**[함정(Vessel) 상세 정보 조회 쿼리]**
+`Weapon` 테이블(기본 정보)과 `sea_spec` 테이블(해상 공통), 그리고 `vessel` 테이블(함정 고유)을 조인하여 전체 스펙을 완성함
+
+```sql
+SELECT
+    W.name AS weapon_name,
+    W.weapon_id,
+    -- 해상 공통 스펙 (Sea Common Spec)
+    SS.max_speed_knot,
+    SS.displacement,
+    SS.crew_capacity AS sea_crew_capacity,
+    SS.armament,
+    SS.radar_type,
+    -- 함정 고유 스펙 (Vessel Specific Spec)
+    V.accuracy_speed,
+    V.max_speed_vessel,
+    V.buoyancy_vessel
+FROM Weapon W
+JOIN sea_spec SS ON W.weapon_id = SS.weapon_weapon_id
+JOIN vessel V    ON SS.weapon_weapon_id = V.weapon_id
+WHERE W.weapon_id = :weaponId
 ```
 
 3. 무기 계보 추적 (Genealogy Tracking)
-      - 기능: 특정 무기의 **이전 모델(Predecessor)**과 **후속 모델(Successor)**을 계층적으로 시각화합니다.
+      - 기능: 특정 무기의 **이전 모델(Predecessor)**과 **후속 모델(Successor)**을 계층적으로 시각화함
       - 기술: MariaDB의 WITH RECURSIVE 구문을 Native Query로 작성하여, 무한히 연결된 개발/개량 역사를 한 번의 쿼리로 효율적으로 조회함
+
+**[재귀 구문을 이용한 후속 모델 탐색]**
 ```sql
 WITH RECURSIVE successor_chain AS (
     -- Anchor Member: 시작점 (직계 후속 모델 찾기)
@@ -103,9 +125,10 @@ SELECT
     (SELECT name FROM weapon WHERE weapon_id = T.previous_model_id) AS previous_model_name
 FROM successor_chain T
 ORDER BY T.generation_level ASC;
+```
 
-
-
+**[재귀 구문을 이용한 선행 모델 탐색]**
+```
 WITH RECURSIVE predecessor_chain AS (
     -- Anchor Member: 시작점 (현재 무기)
     SELECT W.weapon_id, W.name, W.previous_model_id, 0 AS generation_level
@@ -131,11 +154,21 @@ ORDER BY T.generation_level DESC; -- 가장 오래된 모델부터 정렬
 
 
 4. 프라모델 구매 정보 연동 
-      - 무기 상세 페이지에서 해당 무기의 프라모델 상품 정보(이미지, 시리즈명, 구매 링크)를 제공합니다.
+      - 무기 상세 페이지에서 해당 무기의 프라모델 상품 정보(이미지, 시리즈명, 구매 링크)를 제공함
       - 1:N 관계를 활용하여 하나의 무기에 여러 제조사의 프라모델 정보를 매핑함
-```
-@Query(value ="SELECT " +"    ML.id, " + // model_link의 고유ID (필요한 경우)"    ML.product_page_url, " + // 프라모델 판매 링크"    ML.series, " +          // 무기 시리즈 명"    ML.image_url, " +        // 이미지URL"    ML.description, " +      // 상세 설명"    ML.name "+"FROM " +"    model_link ML " +"WHERE " +"    ML.weapon = :weaponId", // Weapon ID로 필터링nativeQuery = true)List<Map<String, Object>> findModelLinksByWeaponId(@Param("weaponId") Long weaponId);
+**[프라모델 정보 조회 쿼리]**
+`model_link` 테이블에서 특정 무기(`weaponId`)와 매핑된 모든 프라모델의 구매 링크, 이미지, 시리즈 정보를 조회함
 
+```sql
+SELECT
+    ML.id,
+    ML.name,
+    ML.series,           -- 무기 시리즈 명 (예: K2 계열)
+    ML.product_page_url, -- 구매처 링크
+    ML.image_url,        -- 프라모델 이미지 URL
+    ML.description       -- 상세 설명
+FROM model_link ML
+WHERE ML.weapon = :weaponId
 ```
 
 ## 구현 결과
@@ -186,7 +219,7 @@ K-1A1은 이전모델에 K-1, 후속모델에 K-1A2가 들어있고 K-1A2는 이
       - 문제: 무기 타입별로 상세 페이지 HTML(Tank-detail.html, Vessel-detail.html 등)을 별도로 구현하여 코드 중복 발생.
       - 해결 방안: Thymeleaf의 Fragment 기능을 활용하여 공통 레이아웃을 모듈화하고, 동적 폼 생성 방식으로 개선 필요.
 
-Review
+## Review
       본 프로젝트를 통해 Spring Boot와 JPA의 편리함뿐만 아니라, 복잡한 데이터 관계를 풀기 위한 Native SQL의 중요성을 깊이 체감했습니다. 특히 수업 시간에 배운 **재귀 쿼리**(WITH RECURSIVE)를 실제 서비스 로직(무기 계보)에 적용해 보며, 계층형 데이터를 처리하는 DB 기술을 내재화할 수 있었습니다.
 
 
