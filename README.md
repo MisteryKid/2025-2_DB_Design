@@ -56,10 +56,50 @@ findByNameContainingIgnoreCase(String name) # 대소문자를 구분하지 않�
       - 기능: 특정 무기의 **이전 모델(Predecessor)**과 **후속 모델(Successor)**을 계층적으로 시각화합니다.
       - 기술: MariaDB의 WITH RECURSIVE 구문을 Native Query로 작성하여, 무한히 연결된 개발/개량 역사를 한 번의 쿼리로 효율적으로 조회함
 ```sql
-@Query(value ="WITH RECURSIVE successor_chain AS (" +"    SELECT W.weapon_id, W.name, W.previous_model_id, 1 AS generation_level " +"    FROM weapon W " +"    WHERE W.previous_model_id = :startWeaponId " + //startWeaponId 파라미터 사용"    UNION ALL " +"    SELECT W.weapon_id, W.name, W.previous_model_id, SC.generation_level + 1 AS generation_level " +"    FROM weapon W " +"    INNER JOIN successor_chain SC ON W.previous_model_id = SC.weapon_id " +")" +"SELECT " +"    T.weapon_id, " +"    T.name AS successor_name, " +"    T.generation_level, " +"    (SELECT name FROM weapon WHERE weapon_id = T.previous_model_id) AS previous_model_name " +"FROM " +"    successor_chain T " +"ORDER BY " +"    T.generation_level", // 정확한 별칭generation_level 사용nativeQuery = true)List<Map<String, Object>> findSuccessorsNative(@Param("startWeaponId") Long startWeaponId);
+WITH RECURSIVE successor_chain AS (
+    -- Anchor Member: 시작점 (직계 후속 모델 찾기)
+    SELECT W.weapon_id, W.name, W.previous_model_id, 1 AS generation_level
+    FROM weapon W
+    WHERE W.previous_model_id = :startWeaponId
 
-@Query(value ="WITH RECURSIVE predecessor_chain AS (" +"    SELECT W.weapon_id, W.name, W.previous_model_id, 0 AS generation_level " +"    FROM weapon W " +"    WHERE W.weapon_id = :startWeaponId " + //  입력된ID를 시작점으로 설정"    UNION ALL " +"    SELECT P.weapon_id, P.name, P.previous_model_id, PC.generation_level + 1 AS generation_level " +"    FROM weapon P " +"    INNER JOIN predecessor_chain PC ON P.weapon_id = PC.previous_model_id " + //  역방향 추적")" +"SELECT " +"    T.weapon_id, " +"    T.name AS predecessor_name, " + // successor_name 대신predecessor_name 사용"    T.generation_level, " +"    (SELECT name FROM weapon WHERE weapon_id = T.previous_model_id) AS previous_model_name " +"FROM " +"    predecessor_chain T " +"WHERE " +"    T.generation_level > 0 " + //  시작 모델(0세대) 제외"ORDER BY " +"    T.generation_level DESC", // 가장 오래된 모델부터 정렬nativeQuery = true)List<Map<String, Object>> findPredecessorsNative(@Param("startWeaponId") Long startWeaponId);
+    UNION ALL
 
+    -- Recursive Member: 꼬리에 꼬리를 무는 재귀 탐색
+    SELECT W.weapon_id, W.name, W.previous_model_id, SC.generation_level + 1
+    FROM weapon W
+    INNER JOIN successor_chain SC ON W.previous_model_id = SC.weapon_id
+)
+SELECT 
+    T.weapon_id, 
+    T.name AS successor_name, 
+    T.generation_level,
+    (SELECT name FROM weapon WHERE weapon_id = T.previous_model_id) AS previous_model_name
+FROM successor_chain T
+ORDER BY T.generation_level ASC;
+
+
+
+WITH RECURSIVE predecessor_chain AS (
+    -- Anchor Member: 시작점 (현재 무기)
+    SELECT W.weapon_id, W.name, W.previous_model_id, 0 AS generation_level
+    FROM weapon W
+    WHERE W.weapon_id = :startWeaponId
+
+    UNION ALL
+
+    -- Recursive Member: 이전 모델(previous_model_id)을 타고 역방향 탐색
+    SELECT P.weapon_id, P.name, P.previous_model_id, PC.generation_level + 1
+    FROM weapon P
+    INNER JOIN predecessor_chain PC ON P.weapon_id = PC.previous_model_id
+)
+SELECT 
+    T.weapon_id, 
+    T.name AS predecessor_name, 
+    T.generation_level,
+    (SELECT name FROM weapon WHERE weapon_id = T.previous_model_id) AS previous_model_name
+FROM predecessor_chain T
+WHERE T.generation_level > 0 -- 자기 자신 제외
+ORDER BY T.generation_level DESC; -- 가장 오래된 모델부터 정렬
 ```
 
 
