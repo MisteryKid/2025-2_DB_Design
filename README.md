@@ -128,7 +128,7 @@ ORDER BY T.generation_level ASC;
 ```
 
 **[재귀 구문을 이용한 선행 모델 탐색]**
-```
+```sql
 WITH RECURSIVE predecessor_chain AS (
     -- Anchor Member: 시작점 (현재 무기)
     SELECT W.weapon_id, W.name, W.previous_model_id, 0 AS generation_level
@@ -199,28 +199,24 @@ K-1A1은 이전모델에 K-1, 후속모델에 K-1A2가 들어있고 K-1A2는 이
 
 ## 결론 
 - 프로젝트 요약 및 성과
- 본 프로젝트는 Spring Boot 3를 기반으로 무기 정보 조회 및 검색 기능을 갖춘 웹사이트를 성공적으로 구현했다.
-
+ 본 프로젝트는 Spring Boot 3를 기반으로 무기 정보 조회 및 검색 기능을 갖춘 웹사이트를 성공적으로 구현함
 - 목표 달성
- 무기의 카테고리 및 키워드 통합 검색, 상세 스펙 조회, 계보 추적(선대/후속 모델), 그리고 프라모델 구매 링크 연동이라는 핵심 목표를 모두 달성했다. 
-
+ 무기의 카테고리 및 키워드 통합 검색, 상세 스펙 조회, 계보 추적(선대/후속 모델), 그리고 프라모델 구매 링크 연동이라는 핵심 목표를 모두 달성함
 - 아키텍처 성과
-계층 구조: Controller, Service, Repository로 명확하게 계층을 분리하는 Layered Architecture를 적용하여 코드의 유지보수성과 확장성을 높였다. 
-
+계층 구조: Controller, Service, Repository로 명확하게 계층을 분리하는 Layered Architecture를 적용하여 코드의 유지보수성과 확장성을 높임
 - DB 활용
- 재귀 쿼리(WITH RECURSIVE)와 같은 복잡한 스펙 조회에는 Native Query (SQL)를, 기본적인 CRUD 및 단순 검색에는 Spring Data JPA Query Method를 혼합 사용하여 데이터 접근의 효율성과 생산성을 동시에 확보했다.
+ 재귀 쿼리(WITH RECURSIVE)와 같은 복잡한 스펙 조회에는 Native Query (SQL)를, 기본적인 CRUD 및 단순 검색에는 Spring Data JPA Query Method를 혼합 사용하여 데이터 접근의 효율성과 생산성을 동시에 확보함
 
 ## Trouble Shooting & Limitations
-      1. 동적 쿼리의 유연성 부족 
-      - 문제: 무기 카테고리가 추가될 때마다 Controller/Service 단의 if-else 분기문과 전용 Native Query를 수정해야 함.
-      - 해결 방안(Future Work): QueryDSL을 도입하거나 다형성(Polymorphism)을 활용한 설계로 리팩토링하여 확장성 개선 필요.
-      
-      2. 프론트엔드 템플릿 중복 
-      - 문제: 무기 타입별로 상세 페이지 HTML(Tank-detail.html, Vessel-detail.html 등)을 별도로 구현하여 코드 중복 발생.
-      - 해결 방안: Thymeleaf의 Fragment 기능을 활용하여 공통 레이아웃을 모듈화하고, 동적 폼 생성 방식으로 개선 필요.
+1. 동적 쿼리의 유연성 부족 
+   - 문제: 무기 카테고리가 추가될 때마다 Controller/Service 단의 if-else 분기문과 전용 Native Query를 수정해야 함.
+   - 해결 방안(Future Work): QueryDSL을 도입하거나 다형성(Polymorphism)을 활용한 설계로 리팩토링하여 확장성 개선 필요.
+2. 프론트엔드 템플릿 중복 
+   - 문제: 무기 타입별로 상세 페이지 HTML(Tank-detail.html, Vessel-detail.html 등)을 별도로 구현하여 코드 중복 발생.
+   - 해결 방안: Thymeleaf의 Fragment 기능을 활용하여 공통 레이아웃을 모듈화하고, 동적 폼 생성 방식으로 개선 필요.
 
 ## Review
-      본 프로젝트를 통해 Spring Boot와 JPA의 편리함뿐만 아니라, 복잡한 데이터 관계를 풀기 위한 Native SQL의 중요성을 깊이 체감했습니다. 특히 수업 시간에 배운 **재귀 쿼리**(WITH RECURSIVE)를 실제 서비스 로직(무기 계보)에 적용해 보며, 계층형 데이터를 처리하는 DB 기술을 내재화할 수 있었습니다.
+   본 프로젝트를 통해 Spring Boot와 JPA의 편리함뿐만 아니라, 복잡한 데이터 관계를 풀기 위한 Native SQL의 중요성을 깊이 체감했습니다. 특히 수업 시간에 배운 **재귀 쿼리**(WITH RECURSIVE)를 실제 서비스 로직(무기 계보)에 적용해 보며, 계층형 데이터를 처리하는 DB 기술을 내재화할 수 있었습니다.
 
 
 
