@@ -28,7 +28,7 @@ Demo Video: [시연 영상](https://youtu.be/bea_D4kw5WE)
       - IntelliJ IDEA
       - Git / GitHub
 
-본 프로젝트는 Layered Architecture (Controller - Service - Repository)를 준수하여 유지보수성과 확장성을 고려했습니다. 
+본 프로젝트는 Layered Architecture (Controller - Service - Repository)를 준수하여 유지보수성과 확장성을 고려했다.  
       - Entity Mapping: DB 테이블 구조를 객체로 매핑하여 관리
       - Hybrid Data Access:
             - Spring Data JPA: 단순 조회 및 기본 CRUD 처리 
@@ -55,7 +55,7 @@ findByNameContainingIgnoreCase(String name) # 대소문자를 구분하지 않�
 3. 무기 계보 추적 (Genealogy Tracking)
       - 기능: 특정 무기의 **이전 모델(Predecessor)**과 **후속 모델(Successor)**을 계층적으로 시각화합니다.
       - 기술: MariaDB의 WITH RECURSIVE 구문을 Native Query로 작성하여, 무한히 연결된 개발/개량 역사를 한 번의 쿼리로 효율적으로 조회함
-```
+```sql
 @Query(value ="WITH RECURSIVE successor_chain AS (" +"    SELECT W.weapon_id, W.name, W.previous_model_id, 1 AS generation_level " +"    FROM weapon W " +"    WHERE W.previous_model_id = :startWeaponId " + //startWeaponId 파라미터 사용"    UNION ALL " +"    SELECT W.weapon_id, W.name, W.previous_model_id, SC.generation_level + 1 AS generation_level " +"    FROM weapon W " +"    INNER JOIN successor_chain SC ON W.previous_model_id = SC.weapon_id " +")" +"SELECT " +"    T.weapon_id, " +"    T.name AS successor_name, " +"    T.generation_level, " +"    (SELECT name FROM weapon WHERE weapon_id = T.previous_model_id) AS previous_model_name " +"FROM " +"    successor_chain T " +"ORDER BY " +"    T.generation_level", // 정확한 별칭generation_level 사용nativeQuery = true)List<Map<String, Object>> findSuccessorsNative(@Param("startWeaponId") Long startWeaponId);
 
 @Query(value ="WITH RECURSIVE predecessor_chain AS (" +"    SELECT W.weapon_id, W.name, W.previous_model_id, 0 AS generation_level " +"    FROM weapon W " +"    WHERE W.weapon_id = :startWeaponId " + //  입력된ID를 시작점으로 설정"    UNION ALL " +"    SELECT P.weapon_id, P.name, P.previous_model_id, PC.generation_level + 1 AS generation_level " +"    FROM weapon P " +"    INNER JOIN predecessor_chain PC ON P.weapon_id = PC.previous_model_id " + //  역방향 추적")" +"SELECT " +"    T.weapon_id, " +"    T.name AS predecessor_name, " + // successor_name 대신predecessor_name 사용"    T.generation_level, " +"    (SELECT name FROM weapon WHERE weapon_id = T.previous_model_id) AS previous_model_name " +"FROM " +"    predecessor_chain T " +"WHERE " +"    T.generation_level > 0 " + //  시작 모델(0세대) 제외"ORDER BY " +"    T.generation_level DESC", // 가장 오래된 모델부터 정렬nativeQuery = true)List<Map<String, Object>> findPredecessorsNative(@Param("startWeaponId") Long startWeaponId);
