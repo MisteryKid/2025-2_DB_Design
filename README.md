@@ -30,10 +30,10 @@ Demo Video: [시연 영상](https://youtu.be/bea_D4kw5WE)
    - Git / GitHub
 
 본 프로젝트는 Layered Architecture (Controller - Service - Repository)를 준수하여 유지보수성과 확장성을 고려했다.  
-      - Entity Mapping: DB 테이블 구조를 객체로 매핑하여 관리
-      - Hybrid Data Access:
-            - Spring Data JPA: 단순 조회 및 기본 CRUD 처리 
-            - Native Query (SQL): 복잡한 JOIN, 동적 스펙 조회, 재귀 쿼리(계보 추적) 처리
+ - Entity Mapping: DB 테이블 구조를 객체로 매핑하여 관리
+ - Hybrid Data Access:
+    - Spring Data JPA: 단순 조회 및 기본 CRUD 처리 
+    - Native Query (SQL): 복잡한 JOIN, 동적 스펙 조회, 재귀 쿼리(계보 추적) 처리
 
 ---
 # 1차 과제 - 주제 선정 및 ERD 구성 
